@@ -5,6 +5,8 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 from typing import Optional
 
+import robots
+
 import account
 import config
 
@@ -47,3 +49,9 @@ def positions():
 def orders(limit: Optional[int] = None):
     client = _ensure_client()
     return account.get_trade_history(client, limit=limit)
+
+
+@app.get("/bots")
+def bots() -> list:
+    """取得所有交易機器人資訊。"""
+    return robots.get_bots()

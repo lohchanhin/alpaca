@@ -11,6 +11,8 @@
 </head>
 <body>
     <h1>Alpaca Trading Dashboard</h1>
+    <div id="loading" style="display:none;">載入中...</div>
+    <div id="error" style="display:none;color:red;"></div>
 
     <div class="section">
         <h2>Account</h2>
@@ -35,24 +37,62 @@
     </div>
 
     <script>
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+
+    function showLoading() {
+        loadingEl.style.display = 'block';
+    }
+
+    function hideLoading() {
+        loadingEl.style.display = 'none';
+    }
+
+    function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+    }
+
+    function clearError() {
+        errorEl.textContent = '';
+        errorEl.style.display = 'none';
+    }
+
     async function fetchData() {
+        showLoading();
+        clearError();
         try {
-            const [account, positions, orders] = await Promise.all([
-                fetch('/account').then(r => r.json()),
-                fetch('/positions').then(r => r.json()),
-                fetch('/orders?limit=5').then(r => r.json())
+            const [accountResp, positionsResp, ordersResp] = await Promise.all([
+                fetch('/account'),
+                fetch('/positions'),
+                fetch('/orders?limit=5')
             ]);
+            if (!accountResp.ok || !positionsResp.ok || !ordersResp.ok) {
+                throw new Error('Fetch failed');
+            }
+            const account = await accountResp.json();
+            const positions = await positionsResp.json();
+            const orders = await ordersResp.json();
             document.getElementById('account').textContent = JSON.stringify(account, null, 2);
             document.getElementById('positions').textContent = JSON.stringify(positions, null, 2);
             document.getElementById('orders').textContent = JSON.stringify(orders, null, 2);
         } catch (err) {
             console.error(err);
+            showError('資料載入失敗');
+        } finally {
+            hideLoading();
         }
     }
 
     async function loadBots() {
+        showLoading();
+        clearError();
         try {
-            const bots = await fetch('/bots').then(r => r.json());
+            const resp = await fetch('/bots');
+            if (!resp.ok) {
+                throw new Error('Fetch failed');
+            }
+            const bots = await resp.json();
             const list = document.getElementById('bots');
             list.innerHTML = '';
             bots.forEach((bot, idx) => {
@@ -69,6 +109,9 @@
             });
         } catch (err) {
             console.error(err);
+            showError('無法載入機器人資料');
+        } finally {
+            hideLoading();
         }
     }
 

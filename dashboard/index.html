@@ -33,9 +33,14 @@
 
 <section class="section">
     <h2>Bots</h2>
-    <ul id="bots"></ul>
+    <table id="bots"></table>
     <div style="margin-top:12px;">
-        <input id="new-bot-name" placeholder="Bot name" />
+        <input id="new-bot-name" placeholder="Name" />
+        <input id="new-bot-strategy" placeholder="Strategy" />
+        <label style="margin-left:8px;">
+            <input type="checkbox" id="new-bot-enabled"> Enabled
+        </label>
+        <input id="new-bot-params" placeholder="Params JSON" />
         <button onclick="addBot()">Add</button>
     </div>
 </section>
@@ -83,26 +88,42 @@ async function fetchData() {
 async function loadBots() {
     try {
         const bots = await fetch("/bots").then(r => r.json());
-        const list = document.getElementById("bots");
-        list.innerHTML = "";
+        const table = document.getElementById("bots");
+        table.innerHTML = "";
+        table.insertAdjacentHTML("beforeend",
+            `<thead><tr><th>Name</th><th>Strategy</th><th>Enabled</th><th>Params</th><th></th></tr></thead>`);
+        const tbody = document.createElement("tbody");
         bots.forEach((bot, i) => {
-            list.insertAdjacentHTML("beforeend",
-                `<li>
-                    <input value="${bot.name || ""}" onchange="updateBot(${i}, this.value)">
-                    <button onclick="deleteBot(${i})">Delete</button>
-                 </li>`);
+            const row = `<tr>
+                <td><input value="${bot.name || ""}" onchange='updateBot(${i}, {name:this.value})'></td>
+                <td><input value="${bot.strategy || ""}" onchange='updateBot(${i}, {strategy:this.value})'></td>
+                <td style="text-align:center;"><input type="checkbox" ${bot.enabled ? "checked" : ""} onchange='updateBot(${i}, {enabled:this.checked})'></td>
+                <td><input value='${JSON.stringify(bot.params)}' onchange='updateBot(${i}, {params: JSON.parse(this.value || "{}")})'></td>
+                <td><button onclick='deleteBot(${i})'>Delete</button></td>
+            </tr>`;
+            tbody.insertAdjacentHTML("beforeend", row);
         });
+        table.appendChild(tbody);
     } catch (e) { console.error(e); }
 }
 async function addBot() {
     const name = document.getElementById("new-bot-name").value.trim();
-    if (!name) return;
-    await fetch("/bots", {method:"POST", headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})});
+    const strategy = document.getElementById("new-bot-strategy").value.trim();
+    const enabled = document.getElementById("new-bot-enabled").checked;
+    let params = {};
+    try { params = JSON.parse(document.getElementById("new-bot-params").value || "{}"); } catch (e) { alert("Params JSON error"); return; }
+    await fetch("/bots", {
+        method:"POST",
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name, strategy, enabled, params})});
     document.getElementById("new-bot-name").value = "";
+    document.getElementById("new-bot-strategy").value = "";
+    document.getElementById("new-bot-enabled").checked = false;
+    document.getElementById("new-bot-params").value = "";
     loadBots();
 }
-async function updateBot(id, name) {
-    await fetch(`/bots/${id}`, {method:"PUT", headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})});
+async function updateBot(id, data) {
+    await fetch(`/bots/${id}`, {method:"PUT", headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
 }
 async function deleteBot(id) {
     await fetch(`/bots/${id}`, {method:"DELETE"});

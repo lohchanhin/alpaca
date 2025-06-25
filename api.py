@@ -49,13 +49,13 @@ def get_account():
 @app.get("/positions")
 def positions():
     client = _ensure_client()
-    return account.get_positions(client)
+    return {"positions": account.get_positions(client)}
 
 
 @app.get("/orders")
 def orders(limit: Optional[int] = None):
     client = _ensure_client()
-    return account.get_trade_history(client, limit=limit)
+    return {"orders": account.get_trade_history(client, limit=limit)}
 
 
 @app.get("/bots")

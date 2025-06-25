@@ -28,9 +28,22 @@ def get_account_info(client: TradingClient) -> dict:
     }
 
 
-def get_positions(client: TradingClient):
-    """取得帳戶持倉資料列表。"""
-    return client.get_all_positions()
+def get_positions(client: TradingClient) -> List[dict]:
+    """取得帳戶持倉資料列表，並過濾只回傳必要欄位。"""
+    positions = client.get_all_positions()
+    result = []
+    for pos in positions:
+        result.append(
+            {
+                "symbol": pos.symbol,
+                "qty": str(getattr(pos, "qty", "")),
+                "avg_entry_price": str(getattr(pos, "avg_entry_price", "")),
+                "current_price": str(getattr(pos, "current_price", "")),
+                "unrealized_pl": str(getattr(pos, "unrealized_pl", "")),
+                "unrealized_plpc": str(getattr(pos, "unrealized_plpc", "")),
+            }
+        )
+    return result
 
 
 def get_trade_history(
@@ -38,7 +51,19 @@ def get_trade_history(
     *,
     status: QueryOrderStatus = QueryOrderStatus.CLOSED,
     limit: Optional[int] = None,
-) -> list:
-    """取得歷史訂單（交易）紀錄。"""
+) -> List[dict]:
+    """取得歷史訂單（交易）紀錄，僅保留必要欄位。"""
     req = GetOrdersRequest(status=status, limit=limit)
-    return client.get_orders(req)
+    orders = client.get_orders(req)
+    result = []
+    for od in orders:
+        result.append(
+            {
+                "symbol": od.symbol,
+                "qty": str(getattr(od, "qty", "")),
+                "side": getattr(od, "side", ""),
+                "filled_avg_price": str(getattr(od, "filled_avg_price", "")),
+                "status": getattr(od, "status", ""),
+            }
+        )
+    return result

@@ -86,7 +86,7 @@ def invesment(monkeypatch):
     sys.modules['alpaca.trading.requests'] = alp_req
     sys.modules['alpaca.trading.enums'] = alp_enum
 
-    module = importlib.import_module('invesment')
+    module = importlib.import_module('investment')
     return module
 
 

@@ -17,7 +17,11 @@ pip install -r requirements.txt
 ```dotenv
 APCA_API_KEY_ID=你的APIKey
 APCA_API_SECRET_KEY=你的SecretKey
+# 是否使用 Paper Trading，預設為 true
+ALPACA_USE_PAPER=true
 ```
+
+`ALPACA_USE_PAPER` 用來指定是否使用 Paper Trading 環境，設定為 `false` 即可連線到正式帳戶。
 
 建議透過 `python-dotenv` 在執行程式前載入 `.env`：
 

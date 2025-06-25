@@ -27,6 +27,13 @@
         <pre id="orders">載入中...</pre>
     </div>
 
+    <div class="section">
+        <h2>Bots</h2>
+        <ul id="bots"></ul>
+        <input id="new-bot-name" placeholder="Bot name">
+        <button onclick="addBot()">Add</button>
+    </div>
+
     <script>
     async function fetchData() {
         try {
@@ -43,7 +50,54 @@
         }
     }
 
+    async function loadBots() {
+        try {
+            const bots = await fetch('/bots').then(r => r.json());
+            const list = document.getElementById('bots');
+            list.innerHTML = '';
+            bots.forEach((bot, idx) => {
+                const li = document.createElement('li');
+                const input = document.createElement('input');
+                input.value = bot.name || '';
+                input.onchange = () => updateBot(idx, {name: input.value});
+                li.appendChild(input);
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.onclick = () => deleteBot(idx);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function addBot() {
+        const name = document.getElementById('new-bot-name').value;
+        await fetch('/bots', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name})
+        });
+        document.getElementById('new-bot-name').value = '';
+        loadBots();
+    }
+
+    async function updateBot(id, bot) {
+        await fetch(`/bots/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(bot)
+        });
+    }
+
+    async function deleteBot(id) {
+        await fetch(`/bots/${id}`, {method: 'DELETE'});
+        loadBots();
+    }
+
     fetchData();
+    loadBots();
     setInterval(fetchData, 10000);
     </script>
 </body>

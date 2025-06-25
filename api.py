@@ -1,12 +1,21 @@
 """提供簡易 Web API 的介面。"""
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pathlib import Path
 from typing import Optional
 
 import account
 import config
 
 app = FastAPI(title="Alpaca Trading API")
+
+
+@app.get("/")
+def dashboard():
+    """回傳前端儀表板頁面"""
+    path = Path(__file__).parent / "dashboard" / "index.html"
+    return FileResponse(path)
 
 _client = None
 

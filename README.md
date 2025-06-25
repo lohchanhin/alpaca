@@ -40,7 +40,7 @@ python investment.py
 專案同時提供簡易的 FastAPI 介面，可透過 `uvicorn` 啟動：
 
 ```bash
-uvicorn api:app
+python -m uvicorn api:app
 ```
 
 常用路由及用途簡述如下：

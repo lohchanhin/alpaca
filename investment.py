@@ -9,13 +9,12 @@ Alpaca Paper Trading GUI 測試工具（修正版 2025-06-25）
 依賴套件：pip install alpaca-py==0.14
 """
 
-from decimal import Decimal, ROUND_HALF_UP
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+from account import connect
+from orders import buy_market
 from alpaca.trading.client import TradingClient
-from alpaca.trading.requests import MarketOrderRequest
-from alpaca.trading.enums import OrderSide, TimeInForce
 
 # ────────────────────────────────────────────────
 # 0. 清理殘留的 default root（Spyder 反覆執行時必要）
@@ -50,10 +49,10 @@ client: TradingClient | None = None  # 連線成功後賦值
 # 3. 功能函式
 # ────────────────────────────────────────────────
 def connect_account() -> None:
-    """建立 TradingClient 並取得帳戶資訊。"""
+    """以輸入的憑證連線帳戶並顯示結果。"""
     global client
 
-    api_key    = api_key_var.get()
+    api_key = api_key_var.get()
     secret_key = secret_key_var.get()
     paper_mode = use_paper_var.get()
 
@@ -62,18 +61,7 @@ def connect_account() -> None:
         return
 
     try:
-        client = TradingClient(api_key, secret_key, paper=paper_mode)
-        acct   = client.get_account()
-
-        buying_power = Decimal(str(acct.buying_power)).quantize(
-            Decimal("0.01"), ROUND_HALF_UP
-        )
-        msg = (
-            f"帳戶連線成功！\n"
-            f"狀態：{acct.status}\n"
-            f"總淨值（Equity）：${acct.equity}\n"
-            f"可用買進金額（Buying Power）：${buying_power}"
-        )
+        client, msg = connect(api_key, secret_key, paper_mode)
         _show_result(msg)
         messagebox.showinfo("成功", "帳戶連線並取得資訊成功！")
     except Exception as exc:
@@ -88,7 +76,7 @@ def place_order() -> None:
         return
 
     symbol = symbol_var.get().strip().upper()
-    qty    = qty_var.get().strip()
+    qty = qty_var.get().strip()
 
     if symbol == "" or qty == "":
         messagebox.showwarning("缺少參數", "請填寫股票代號與數量！")
@@ -98,14 +86,8 @@ def place_order() -> None:
         return
 
     try:
-        req = MarketOrderRequest(
-            symbol=symbol,
-            qty=int(qty),
-            side=OrderSide.BUY,
-            time_in_force=TimeInForce.DAY,
-        )
-        order = client.submit_order(req)
-        messagebox.showinfo("下單成功", f"訂單已提交！\n訂單 ID：{order.id}")
+        order_id = buy_market(client, symbol, int(qty))
+        messagebox.showinfo("下單成功", f"訂單已提交！\n訂單 ID：{order_id}")
     except Exception as exc:
         messagebox.showerror("下單失敗", f"發生錯誤：\n{exc}")
 

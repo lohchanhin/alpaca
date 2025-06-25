@@ -1,145 +1,118 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="utf-8">
-    <title>Alpaca Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8" />
+<title>Alpaca Trading Dashboard</title>
+
+<!-- Google Fonts：Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- 外部 CSS -->
+<link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <h1>Alpaca Trading Dashboard</h1>
+<h1>Alpaca Trading Dashboard</h1>
 
-    <div class="section">
-        <h2>Account</h2>
-        <table id="account"></table>
-    </div>
+<section class="section">
+    <h2>Account</h2>
+    <table id="account"></table>
+</section>
 
-    <div class="section">
-        <h2>Positions</h2>
-        <table id="positions"></table>
-    </div>
+<section class="section">
+    <h2>Positions</h2>
+    <table id="positions"></table>
+</section>
 
-    <div class="section">
-        <h2>Orders</h2>
-        <table id="orders"></table>
-    </div>
+<section class="section">
+    <h2>Orders (latest 5)</h2>
+    <table id="orders"></table>
+</section>
 
-    <div class="section">
-        <h2>Bots</h2>
-        <ul id="bots"></ul>
-        <input id="new-bot-name" placeholder="Bot name">
+<section class="section">
+    <h2>Bots</h2>
+    <ul id="bots"></ul>
+    <div style="margin-top:12px;">
+        <input id="new-bot-name" placeholder="Bot name" />
         <button onclick="addBot()">Add</button>
     </div>
+</section>
 
-    <script>
-    function renderObjectTable(obj, id) {
-        const table = document.getElementById(id);
-        table.innerHTML = '';
-        for (const [key, value] of Object.entries(obj)) {
-            const tr = document.createElement('tr');
-            const th = document.createElement('th');
-            th.textContent = key;
-            const td = document.createElement('td');
-            td.textContent = value;
-            tr.appendChild(th);
-            tr.appendChild(td);
-            table.appendChild(tr);
-        }
+<script>
+/* ---------- 共用渲染 ---------- */
+function renderObjectTable(obj, id) {
+    const table = document.getElementById(id);
+    table.innerHTML = "";
+    for (const [k, v] of Object.entries(obj)) {
+        table.insertAdjacentHTML("beforeend",
+            `<tr><th>${k}</th><td>${v}</td></tr>`);
     }
+}
+function renderArrayTable(arr, id) {
+    const table = document.getElementById(id);
+    table.innerHTML = "";
+    if (!Array.isArray(arr) || arr.length === 0) return;
 
-    function renderArrayTable(arr, id) {
-        const table = document.getElementById(id);
-        table.innerHTML = '';
-        if (!Array.isArray(arr) || arr.length === 0) {
-            return;
-        }
-        const keys = Object.keys(arr[0]);
-        const thead = document.createElement('thead');
-        const headRow = document.createElement('tr');
-        keys.forEach(k => {
-            const th = document.createElement('th');
-            th.textContent = k;
-            headRow.appendChild(th);
+    const keys = Object.keys(arr[0]);
+    table.insertAdjacentHTML("beforeend",
+        "<thead><tr>" + keys.map(k => `<th>${k}</th>`).join("") + "</tr></thead>");
+    const tbody = document.createElement("tbody");
+    arr.forEach(it => {
+        const row = "<tr>" + keys.map(k =>
+            `<td>${typeof it[k] === "object" ? JSON.stringify(it[k]) : it[k]}</td>`).join("") + "</tr>";
+        tbody.insertAdjacentHTML("beforeend", row);
+    });
+    table.appendChild(tbody);
+}
+
+/* ---------- API 請求 ---------- */
+async function fetchData() {
+    try {
+        const [acct, pos, ord] = await Promise.all([
+            fetch("/account").then(r => r.json()),
+            fetch("/positions").then(r => r.json()),
+            fetch("/orders?limit=5").then(r => r.json())
+        ]);
+        renderObjectTable(acct, "account");
+        renderArrayTable(pos, "positions");
+        renderArrayTable(ord, "orders");
+    } catch (e) { console.error(e); }
+}
+async function loadBots() {
+    try {
+        const bots = await fetch("/bots").then(r => r.json());
+        const list = document.getElementById("bots");
+        list.innerHTML = "";
+        bots.forEach((bot, i) => {
+            list.insertAdjacentHTML("beforeend",
+                `<li>
+                    <input value="${bot.name || ""}" onchange="updateBot(${i}, this.value)">
+                    <button onclick="deleteBot(${i})">Delete</button>
+                 </li>`);
         });
-        thead.appendChild(headRow);
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-        arr.forEach(item => {
-            const tr = document.createElement('tr');
-            keys.forEach(k => {
-                const td = document.createElement('td');
-                const val = item[k];
-                td.textContent = (typeof val === 'object') ? JSON.stringify(val) : val;
-                tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-    }
-
-    async function fetchData() {
-        try {
-            const [account, positions, orders] = await Promise.all([
-                fetch('/account').then(r => r.json()),
-                fetch('/positions').then(r => r.json()),
-                fetch('/orders?limit=5').then(r => r.json())
-            ]);
-            renderObjectTable(account, 'account');
-            renderArrayTable(positions, 'positions');
-            renderArrayTable(orders, 'orders');
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function loadBots() {
-        try {
-            const bots = await fetch('/bots').then(r => r.json());
-            const list = document.getElementById('bots');
-            list.innerHTML = '';
-            bots.forEach((bot, idx) => {
-                const li = document.createElement('li');
-                const input = document.createElement('input');
-                input.value = bot.name || '';
-                input.onchange = () => updateBot(idx, {name: input.value});
-                li.appendChild(input);
-                const delBtn = document.createElement('button');
-                delBtn.textContent = 'Delete';
-                delBtn.onclick = () => deleteBot(idx);
-                li.appendChild(delBtn);
-                list.appendChild(li);
-            });
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    async function addBot() {
-        const name = document.getElementById('new-bot-name').value;
-        await fetch('/bots', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({name})
-        });
-        document.getElementById('new-bot-name').value = '';
-        loadBots();
-    }
-
-    async function updateBot(id, bot) {
-        await fetch(`/bots/${id}`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(bot)
-        });
-    }
-
-    async function deleteBot(id) {
-        await fetch(`/bots/${id}`, {method: 'DELETE'});
-        loadBots();
-    }
-
-    fetchData();
+    } catch (e) { console.error(e); }
+}
+async function addBot() {
+    const name = document.getElementById("new-bot-name").value.trim();
+    if (!name) return;
+    await fetch("/bots", {method:"POST", headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})});
+    document.getElementById("new-bot-name").value = "";
     loadBots();
-    setInterval(fetchData, 10000);
-    </script>
+}
+async function updateBot(id, name) {
+    await fetch(`/bots/${id}`, {method:"PUT", headers:{'Content-Type':'application/json'}, body:JSON.stringify({name})});
+}
+async function deleteBot(id) {
+    await fetch(`/bots/${id}`, {method:"DELETE"});
+    loadBots();
+}
+
+/* ---------- INIT ---------- */
+fetchData();
+loadBots();
+setInterval(fetchData, 10000);   // 每 10 秒更新一次
+</script>
 </body>
 </html>

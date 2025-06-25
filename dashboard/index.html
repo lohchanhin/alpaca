@@ -27,7 +27,12 @@
 </section>
 
 <section class="section">
-    <h2>Orders (latest 5)</h2>
+    <h2>Orders</h2>
+    <div style="margin-bottom:8px;">
+        <button onclick="prevOrders()">Prev</button>
+        <span id="page-info" style="margin:0 8px;">1</span>
+        <button onclick="nextOrders()">Next</button>
+    </div>
     <table id="orders"></table>
 </section>
 
@@ -68,16 +73,25 @@ function renderArrayTable(arr, id) {
 }
 
 /* ---------- API 請求 ---------- */
+let orderPage = 1;
+const orderLimit = 5;
+
+async function fetchOrders(page = orderPage) {
+    const ord = await fetch(`/orders?page=${page}&limit=${orderLimit}`).then(r => r.json());
+    orderPage = page;
+    renderArrayTable(ord, "orders");
+    document.getElementById("page-info").textContent = page;
+}
+
 async function fetchData() {
     try {
-        const [acct, pos, ord] = await Promise.all([
+        const [acct, pos] = await Promise.all([
             fetch("/account").then(r => r.json()),
-            fetch("/positions").then(r => r.json()),
-            fetch("/orders?limit=5").then(r => r.json())
+            fetch("/positions").then(r => r.json())
         ]);
         renderObjectTable(acct, "account");
         renderArrayTable(pos, "positions");
-        renderArrayTable(ord, "orders");
+        fetchOrders(orderPage);
     } catch (e) { console.error(e); }
 }
 async function loadBots() {
@@ -107,6 +121,16 @@ async function updateBot(id, name) {
 async function deleteBot(id) {
     await fetch(`/bots/${id}`, {method:"DELETE"});
     loadBots();
+}
+
+function prevOrders() {
+    if (orderPage > 1) {
+        fetchOrders(orderPage - 1);
+    }
+}
+
+function nextOrders() {
+    fetchOrders(orderPage + 1);
 }
 
 /* ---------- INIT ---------- */

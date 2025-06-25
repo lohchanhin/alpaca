@@ -53,9 +53,10 @@ def positions():
 
 
 @app.get("/orders")
-def orders(limit: Optional[int] = None):
+def orders(page: int = 1, limit: Optional[int] = None):
+    """取得歷史訂單並支援分頁查詢"""
     client = _ensure_client()
-    return account.get_trade_history(client, limit=limit)
+    return account.get_trade_history(client, limit=limit, page=page)
 
 
 @app.get("/bots")

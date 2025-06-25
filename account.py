@@ -38,7 +38,16 @@ def get_trade_history(
     *,
     status: QueryOrderStatus = QueryOrderStatus.CLOSED,
     limit: Optional[int] = None,
+    page: int = 1,
 ) -> list:
-    """取得歷史訂單（交易）紀錄。"""
-    req = GetOrdersRequest(status=status, limit=limit)
-    return client.get_orders(req)
+    """取得歷史訂單（交易）紀錄，支援分頁。"""
+    req_limit = limit
+    if limit is not None and page > 1:
+        req_limit = limit * page
+    req = GetOrdersRequest(status=status, limit=req_limit)
+    orders = client.get_orders(req)
+    if limit is not None:
+        start = (page - 1) * limit
+        end = start + limit
+        return orders[start:end]
+    return orders

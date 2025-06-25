@@ -48,9 +48,17 @@
                     <label style="margin-left:8px;">
                         <input type="checkbox" id="new-bot-enabled"> Enabled
                     </label>
-                    <input id="new-bot-params" placeholder="Params JSON" />
+                    <select id="new-bot-entry">
+                        <option value="ma_crossover">均線交叉</option>
+                        <option value="breakout">突破</option>
+                        <option value="rsi">RSI</option>
+                    </select>
+                    <input id="new-bot-tp" placeholder="TP%" type="number" step="0.1" />
+                    <input id="new-bot-sl" placeholder="SL%" type="number" step="0.1" />
+                    <input id="new-bot-size" placeholder="倉位大小" type="number" />
                     <button onclick="addBot()">Add</button>
                 </div>
+                <!-- TODO: 未來可評估拖曳式模組或程式碼編輯器的整合 -->
             </section>
         </div>
         <div id="history-page" class="page" style="display:none;">
@@ -183,16 +191,23 @@ async function addBot() {
     const name = document.getElementById("new-bot-name").value.trim();
     const strategy = document.getElementById("new-bot-strategy").value.trim();
     const enabled = document.getElementById("new-bot-enabled").checked;
-    let params = {};
-    try { params = JSON.parse(document.getElementById("new-bot-params").value || "{}"); } catch (e) { alert("Params JSON error"); return; }
+    const entry = document.getElementById("new-bot-entry").value;
+    const tp = parseFloat(document.getElementById("new-bot-tp").value) || 0;
+    const sl = parseFloat(document.getElementById("new-bot-sl").value) || 0;
+    const size = parseFloat(document.getElementById("new-bot-size").value) || 0;
+    const params = { entry, tp, sl, size };
     await fetch("/bots", {
-        method:"POST",
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name, strategy, enabled, params})});
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, strategy, enabled, params })
+    });
     document.getElementById("new-bot-name").value = "";
     document.getElementById("new-bot-strategy").value = "";
     document.getElementById("new-bot-enabled").checked = false;
-    document.getElementById("new-bot-params").value = "";
+    document.getElementById("new-bot-entry").value = "ma_crossover";
+    document.getElementById("new-bot-tp").value = "";
+    document.getElementById("new-bot-sl").value = "";
+    document.getElementById("new-bot-size").value = "";
     loadBots();
 }
 async function updateBot(id, data) {

@@ -3,9 +3,48 @@
 <head>
     <meta charset="utf-8">
     <title>Alpaca Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
 </head>
 <body>
     <h1>Alpaca Trading Dashboard</h1>
-    <p>此處可顯示帳戶資訊與交易狀態。</p>
+
+    <div class="section">
+        <h2>Account</h2>
+        <pre id="account">載入中...</pre>
+    </div>
+
+    <div class="section">
+        <h2>Positions</h2>
+        <pre id="positions">載入中...</pre>
+    </div>
+
+    <div class="section">
+        <h2>Orders</h2>
+        <pre id="orders">載入中...</pre>
+    </div>
+
+    <script>
+    async function fetchData() {
+        try {
+            const [account, positions, orders] = await Promise.all([
+                fetch('/account').then(r => r.json()),
+                fetch('/positions').then(r => r.json()),
+                fetch('/orders?limit=5').then(r => r.json())
+            ]);
+            document.getElementById('account').textContent = JSON.stringify(account, null, 2);
+            document.getElementById('positions').textContent = JSON.stringify(positions, null, 2);
+            document.getElementById('orders').textContent = JSON.stringify(orders, null, 2);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    fetchData();
+    setInterval(fetchData, 10000);
+    </script>
 </body>
 </html>

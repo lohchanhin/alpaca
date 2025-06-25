@@ -19,6 +19,13 @@ def dashboard():
     path = Path(__file__).parent / "dashboard" / "index.html"
     return FileResponse(path)
 
+
+@app.get("/styles.css")
+def dashboard_css():
+    """提供前端儀表板的樣式表"""
+    path = Path(__file__).parent / "dashboard" / "styles.css"
+    return FileResponse(path, media_type="text/css")
+
 _client = None
 
 

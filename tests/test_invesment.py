@@ -82,7 +82,7 @@ def invesment(monkeypatch):
     alp_req.GetOrdersRequest = lambda **kw: kw
     alp_enum.OrderSide = SimpleNamespace(BUY='buy')
     alp_enum.TimeInForce = SimpleNamespace(DAY='day')
-    alp_enum.OrderStatus = SimpleNamespace(CLOSED='closed')
+    alp_enum.QueryOrderStatus = SimpleNamespace(CLOSED='closed')
 
     sys.modules['alpaca.trading.client'] = alp_client
     sys.modules['alpaca.trading.requests'] = alp_req

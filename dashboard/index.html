@@ -14,36 +14,61 @@
 </head>
 
 <body>
-<h1>Alpaca Trading Dashboard</h1>
-
-<section class="section">
-    <h2>Account</h2>
-    <table id="account"></table>
-</section>
-
-<section class="section">
-    <h2>Positions</h2>
-    <table id="positions"></table>
-</section>
-
-<section class="section">
-    <h2>Orders (latest 5)</h2>
-    <table id="orders"></table>
-</section>
-
-<section class="section">
-    <h2>Bots</h2>
-    <table id="bots"></table>
-    <div style="margin-top:12px;">
-        <input id="new-bot-name" placeholder="Name" />
-        <input id="new-bot-strategy" placeholder="Strategy" />
-        <label style="margin-left:8px;">
-            <input type="checkbox" id="new-bot-enabled"> Enabled
-        </label>
-        <input id="new-bot-params" placeholder="Params JSON" />
-        <button onclick="addBot()">Add</button>
+<div class="layout">
+    <nav id="sidebar">
+        <button data-page="dashboard-page" class="active">儀表板</button>
+        <button data-page="bots-page">機器人編輯</button>
+        <button data-page="history-page">歷史紀錄</button>
+        <button data-page="account-page">個人戶口</button>
+    </nav>
+    <div id="main">
+        <div id="dashboard-page" class="page">
+            <h1>Alpaca Trading Dashboard</h1>
+            <section class="section">
+                <h2>Account</h2>
+                <table id="account"></table>
+            </section>
+            <section class="section">
+                <h2>Positions</h2>
+                <table id="positions"></table>
+            </section>
+            <section class="section">
+                <h2>Orders (latest 5)</h2>
+                <table id="orders"></table>
+            </section>
+        </div>
+        <div id="bots-page" class="page" style="display:none;">
+            <h1>機器人編輯</h1>
+            <section class="section">
+                <h2>Bots</h2>
+                <table id="bots"></table>
+                <div style="margin-top:12px;">
+                    <input id="new-bot-name" placeholder="Name" />
+                    <input id="new-bot-strategy" placeholder="Strategy" />
+                    <label style="margin-left:8px;">
+                        <input type="checkbox" id="new-bot-enabled"> Enabled
+                    </label>
+                    <input id="new-bot-params" placeholder="Params JSON" />
+                    <button onclick="addBot()">Add</button>
+                </div>
+            </section>
+        </div>
+        <div id="history-page" class="page" style="display:none;">
+            <h1>歷史紀錄</h1>
+            <section class="section">
+                <h2>Orders</h2>
+                <table id="history-orders"></table>
+            </section>
+        </div>
+        <div id="account-page" class="page" style="display:none;">
+            <h1>個人戶口</h1>
+            <section class="section">
+                <h2>Account</h2>
+                <table id="account-info"></table>
+            </section>
+        </div>
     </div>
-</section>
+</div>
 
 <script>
 /* ---------- 共用渲染 ---------- */
@@ -111,10 +136,28 @@ async function fetchData() {
         }));
 
         renderObjectTable(acct, "account");
+        renderObjectTable(acct, "account-info");
         renderArrayTable(posData, "positions", ["symbol", "qty", "avg_price", "current_price", "%"]);
         renderArrayTable(ordData, "orders", ["id", "symbol", "side", "qty", "price"]);
     } catch (e) { console.error(e); }
 }
+
+async function fetchHistory() {
+    try {
+        const ordRes = await fetch("/orders").then(r => r.json());
+        const ordList = ordRes.orders ?? ordRes ?? [];
+        const ordData = ordList.map(o => ({
+            id: o.id,
+            symbol: o.symbol,
+            side: o.side,
+            qty: o.qty,
+            price: o.filled_avg_price,
+            status: o.status
+        }));
+        renderArrayTable(ordData, "history-orders", ["id", "symbol", "side", "qty", "price", "status"]);
+    } catch (e) { console.error(e); }
+}
+
 async function loadBots() {
     try {
         const bots = await fetch("/bots").then(r => r.json());
@@ -160,10 +203,24 @@ async function deleteBot(id) {
     loadBots();
 }
 
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    if (id === 'bots-page') loadBots();
+    if (id === 'history-page') fetchHistory();
+    if (id === 'dashboard-page') fetchData();
+    if (id === 'account-page') fetchData();
+    document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`#sidebar button[data-page="${id}"]`).classList.add('active');
+}
+
 /* ---------- INIT ---------- */
 fetchData();
-loadBots();
 setInterval(fetchData, 10000);   // 每 10 秒更新一次
+
+document.querySelectorAll('#sidebar button').forEach(btn => {
+    btn.addEventListener('click', () => showPage(btn.dataset.page));
+});
 </script>
 </body>
 </html>

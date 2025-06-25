@@ -81,13 +81,14 @@ function renderArrayTable(arr, id, fields) {
 /* ---------- API 請求 ---------- */
 async function fetchData() {
     try {
-        const [acct, pos, ord] = await Promise.all([
+        const [acct, posRes, ordRes] = await Promise.all([
             fetch("/account").then(r => r.json()),
             fetch("/positions").then(r => r.json()),
             fetch("/orders?limit=5").then(r => r.json())
         ]);
 
-        const posData = (pos || []).map(p => {
+        const posList = posRes.positions ?? posRes ?? [];
+        const posData = posList.map(p => {
             const avg = parseFloat(p.avg_entry_price);
             const cur = parseFloat(p.current_price);
             const pct = avg ? (((cur - avg) / avg) * 100).toFixed(2) : "0";
@@ -100,7 +101,8 @@ async function fetchData() {
             };
         });
 
-        const ordData = (ord || []).map(o => ({
+        const ordList = ordRes.orders ?? ordRes ?? [];
+        const ordData = ordList.map(o => ({
             id: o.id,
             symbol: o.symbol,
             side: o.side,

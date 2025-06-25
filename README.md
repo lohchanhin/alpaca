@@ -22,7 +22,7 @@ APCA_API_SECRET_KEY=你的SecretKey
 建議透過 `python-dotenv` 在執行程式前載入 `.env`：
 
 ```bash
-python -m dotenv run -- python invesment.py
+python -m dotenv run -- python investment.py
 ```
 
 或是自行將環境變數匯出後再啟動程式。
@@ -30,7 +30,7 @@ python -m dotenv run -- python invesment.py
 ## 執行程式
 
 ```bash
-python invesment.py
+python investment.py
 ```
 
 程式啟動後即可在圖形介面中輸入或確認 API 憑證，進行連線與下單測試。

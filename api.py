@@ -55,3 +55,36 @@ def orders(limit: Optional[int] = None):
 def bots() -> list:
     """取得所有交易機器人資訊。"""
     return robots.get_bots()
+
+
+@app.post("/bots")
+def create_bot(bot: dict):
+    """新增一個交易機器人。"""
+    robots.add_bot(bot)
+    return {"id": len(robots.get_bots()) - 1}
+
+
+@app.get("/bots/{bot_id}")
+def get_bot(bot_id: int):
+    bots = robots.get_bots()
+    if bot_id < 0 or bot_id >= len(bots):
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return bots[bot_id]
+
+
+@app.put("/bots/{bot_id}")
+def update_bot(bot_id: int, bot: dict):
+    try:
+        robots.update_bot(bot_id, bot)
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return {"success": True}
+
+
+@app.delete("/bots/{bot_id}")
+def delete_bot(bot_id: int):
+    try:
+        robots.delete_bot(bot_id)
+    except IndexError:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    return {"success": True}

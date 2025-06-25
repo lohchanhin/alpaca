@@ -44,3 +44,21 @@ def add_bot(bot: Dict[str, Any]) -> None:
     bots = _load()
     bots.append(bot)
     _save()
+
+
+def update_bot(bot_id: int, bot: Dict[str, Any]) -> None:
+    """更新指定索引的交易機器人資料。"""
+    bots = _load()
+    if bot_id < 0 or bot_id >= len(bots):
+        raise IndexError("bot not found")
+    bots[bot_id] = bot
+    _save()
+
+
+def delete_bot(bot_id: int) -> None:
+    """刪除指定索引的交易機器人。"""
+    bots = _load()
+    if bot_id < 0 or bot_id >= len(bots):
+        raise IndexError("bot not found")
+    del bots[bot_id]
+    _save()

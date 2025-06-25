@@ -17,6 +17,8 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 
+import account
+
 # ────────────────────────────────────────────────
 # 0. 清理殘留的 default root（Spyder 反覆執行時必要）
 # ────────────────────────────────────────────────
@@ -53,7 +55,7 @@ def connect_account() -> None:
     """建立 TradingClient 並取得帳戶資訊。"""
     global client
 
-    api_key    = api_key_var.get()
+    api_key = api_key_var.get()
     secret_key = secret_key_var.get()
     paper_mode = use_paper_var.get()
 
@@ -62,17 +64,14 @@ def connect_account() -> None:
         return
 
     try:
-        client = TradingClient(api_key, secret_key, paper=paper_mode)
-        acct   = client.get_account()
+        client = account.connect(api_key, secret_key, paper=paper_mode)
+        info = account.get_account_info(client)
 
-        buying_power = Decimal(str(acct.buying_power)).quantize(
-            Decimal("0.01"), ROUND_HALF_UP
-        )
         msg = (
-            f"帳戶連線成功！\n"
-            f"狀態：{acct.status}\n"
-            f"總淨值（Equity）：${acct.equity}\n"
-            f"可用買進金額（Buying Power）：${buying_power}"
+            "帳戶連線成功！\n"
+            f"狀態：{info['status']}\n"
+            f"總淨值（Equity）：${info['equity']}\n"
+            f"可用買進金額（Buying Power）：${info['buying_power']}"
         )
         _show_result(msg)
         messagebox.showinfo("成功", "帳戶連線並取得資訊成功！")

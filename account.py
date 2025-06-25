@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import GetOrdersRequest
-from alpaca.trading.enums import OrderStatus
+from alpaca.trading.enums import QueryOrderStatus
 
 
 def connect(api_key: str, secret_key: str, *, paper: bool = True) -> TradingClient:
@@ -36,7 +36,7 @@ def get_positions(client: TradingClient):
 def get_trade_history(
     client: TradingClient,
     *,
-    status: OrderStatus = OrderStatus.CLOSED,
+    status: QueryOrderStatus = QueryOrderStatus.CLOSED,
     limit: Optional[int] = None,
 ) -> list:
     """取得歷史訂單（交易）紀錄。"""

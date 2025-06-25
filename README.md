@@ -40,8 +40,10 @@ python investment.py
 專案同時提供簡易的 FastAPI 介面，可透過 `uvicorn` 啟動：
 
 ```bash
-uvicorn api:app
+python -m dotenv run -- uvicorn api:app
 ```
+
+若未使用 `python-dotenv`，請先於 `config.py` 中設定 API Key。
 
 常用路由及用途簡述如下：
 

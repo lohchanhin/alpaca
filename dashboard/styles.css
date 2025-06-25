@@ -100,3 +100,10 @@ button:hover{
 #bots td input{
     width:100%;
 }
+
+/* ===== 版面 ===== */
+.layout{display:flex;}
+#sidebar{width:200px;flex-shrink:0;}
+#sidebar button{display:block;width:100%;padding:8px;margin-bottom:8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer;}
+#sidebar button.active{background:var(--primary);color:#fff;}
+#main{flex:1;padding-left:24px;}

@@ -50,18 +50,24 @@ function renderObjectTable(obj, id) {
             `<tr><th>${k}</th><td>${v}</td></tr>`);
     }
 }
-function renderArrayTable(arr, id) {
+function renderArrayTable(arr, id, fields) {
     const table = document.getElementById(id);
     table.innerHTML = "";
     if (!Array.isArray(arr) || arr.length === 0) return;
 
-    const keys = Object.keys(arr[0]);
-    table.insertAdjacentHTML("beforeend",
-        "<thead><tr>" + keys.map(k => `<th>${k}</th>`).join("") + "</tr></thead>");
+    const keys = fields ?? Object.keys(arr[0]);
+    table.insertAdjacentHTML(
+        "beforeend",
+        "<thead><tr>" + keys.map(k => `<th>${k}</th>`).join("") + "</tr></thead>"
+    );
     const tbody = document.createElement("tbody");
     arr.forEach(it => {
-        const row = "<tr>" + keys.map(k =>
-            `<td>${typeof it[k] === "object" ? JSON.stringify(it[k]) : it[k]}</td>`).join("") + "</tr>";
+        const row =
+            "<tr>" +
+            keys
+                .map(k => `<td>${typeof it[k] === "object" ? JSON.stringify(it[k]) : it[k]}</td>`)
+                .join("") +
+            "</tr>";
         tbody.insertAdjacentHTML("beforeend", row);
     });
     table.appendChild(tbody);
@@ -75,9 +81,31 @@ async function fetchData() {
             fetch("/positions").then(r => r.json()),
             fetch("/orders?limit=5").then(r => r.json())
         ]);
+
+        const posData = (pos || []).map(p => {
+            const avg = parseFloat(p.avg_entry_price);
+            const cur = parseFloat(p.current_price);
+            const pct = avg ? (((cur - avg) / avg) * 100).toFixed(2) : "0";
+            return {
+                symbol: p.symbol,
+                qty: p.qty,
+                avg_price: p.avg_entry_price,
+                current_price: p.current_price,
+                "%": pct
+            };
+        });
+
+        const ordData = (ord || []).map(o => ({
+            id: o.id,
+            symbol: o.symbol,
+            side: o.side,
+            qty: o.qty,
+            price: o.filled_avg_price
+        }));
+
         renderObjectTable(acct, "account");
-        renderArrayTable(pos, "positions");
-        renderArrayTable(ord, "orders");
+        renderArrayTable(posData, "positions", ["symbol", "qty", "avg_price", "current_price", "%"]);
+        renderArrayTable(ordData, "orders", ["id", "symbol", "side", "qty", "price"]);
     } catch (e) { console.error(e); }
 }
 async function loadBots() {

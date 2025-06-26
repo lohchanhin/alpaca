@@ -1,2 +1,4 @@
 alpaca-py==0.14
 python-dotenv
+fastapi
+uvicorn

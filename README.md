@@ -10,6 +10,8 @@
 pip install -r requirements.txt
 ```
 
+`requirements.txt` 內已包含 `fastapi` 與啟動 API 所需的 `uvicorn`，安裝完成後即可使用 `uvicorn` 啟動 Web API。
+
 ## 設定環境變數
 
 請依照 `.env.example` 的格式新增一個 `.env` 檔案，內容範例如下：
